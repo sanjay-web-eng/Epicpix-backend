@@ -1,0 +1,47 @@
+package com.epicpix.epicpix.models;
+
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Images {
+     private String id;
+     public String imageUrl;
+     public boolean isLikesEnable;
+
+     //TODO : add DBref when DataBase is created
+     public List<?> Likes= new ArrayList<>();
+
+
+     public String getId() {
+          return id;
+     }
+
+     public void setId(String id) {
+          this.id = id;
+     }
+
+     public String getImageUrl() {
+          return imageUrl;
+     }
+
+     public void setImageUrl(String imageUrl) {
+          this.imageUrl = imageUrl;
+     }
+
+     public boolean isLikesEnable() {
+          return isLikesEnable;
+     }
+
+     public void setLikesEnable(boolean likesEnable) {
+          isLikesEnable = likesEnable;
+     }
+
+     public List<?> getLikes() {
+          return Likes;
+     }
+
+     public void setLikes(List<?> likes) {
+          Likes = likes;
+     }
+}
