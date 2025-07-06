@@ -2,27 +2,41 @@ package com.epicpix.epicpix.models;
 
 
 import com.epicpix.epicpix.repos.UserRepo;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
 import java.util.List;
 
+
+@Document(collection = "user")
 public class Users {
      private String id;
      private String username;
      private String password;
      private String email;
 
+     public List<String> roles ;
+
+
      //TODO : add DBref when DataBase is created
-     public List<?> usersImages = new ArrayList<>();
+     public List<Images> usersImages = new ArrayList<>();
      //
-     public List<?> saveImages = new ArrayList<>();
+     public List<Images> saveImages = new ArrayList<>();
      //
-     public List<?> userComments = new ArrayList<>();
+
+     //  public List<?> userComments = new ArrayList<>();
+
      //
-     public List<?> userLikes = new ArrayList<>();
+     public List<Images> userLikes = new ArrayList<>();
 
 
+     public List<String> getRoles() {
+          return roles;
+     }
 
+     public void setRoles(List<String> roles) {
+          this.roles = roles;
+     }
 
      public String getId() {
           return id;
@@ -60,31 +74,18 @@ public class Users {
           return usersImages;
      }
 
-     public void setUsersImages(List<?> usersImages) {
-          this.usersImages = usersImages;
-     }
+
 
      public List<?> getSaveImages() {
           return saveImages;
      }
 
-     public void setSaveImages(List<?> saveImages) {
-          this.saveImages = saveImages;
-     }
 
-     public List<?> getUserComments() {
-          return userComments;
-     }
 
-     public void setUserComments(List<?> userComments) {
-          this.userComments = userComments;
-     }
 
      public List<?> getUserLikes() {
           return userLikes;
      }
 
-     public void setUserLikes(List<?> userLikes) {
-          this.userLikes = userLikes;
-     }
+
 }

@@ -1,9 +1,14 @@
 package com.epicpix.epicpix.models;
 
 
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
+@Document(collection = "wallpapers")
 public class Images {
      private String id;
      public String imageUrl;
@@ -11,7 +16,6 @@ public class Images {
 
      //TODO : add DBref when DataBase is created
      public List<?> Likes= new ArrayList<>();
-
 
      public String getId() {
           return id;
