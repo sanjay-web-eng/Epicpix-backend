@@ -8,6 +8,7 @@ class EpicpixApplicationTests {
 
 	@Test
 	void contextLoads() {
+		System.out.println("my first test");
 	}
 
 }
