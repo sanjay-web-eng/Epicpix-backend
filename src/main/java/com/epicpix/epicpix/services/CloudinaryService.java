@@ -1,6 +1,7 @@
 package com.epicpix.epicpix.services;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.Transformation;
 import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -12,11 +13,26 @@ import java.util.Map;
 
 @Service
 public class CloudinaryService {
-     @Autowired
-     private Cloudinary cloudinary;
+
+     private final Cloudinary cloudinary;
+
+     public CloudinaryService(Cloudinary cloudinary) {
+          this.cloudinary = cloudinary;
+     }
 
      public String getURL(MultipartFile file) throws IOException {
-          Map upload = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
-          return upload.get("secure_url").toString();
+          // Upload the file
+          Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+
+          // Get public_id
+          String publicId = uploadResult.get("public_id").toString();
+          String format = uploadResult.get("format").toString(); // like jpg, png, etc.
+
+          // Generate downloadable URL with fl_attachment flag
+          String downloadUrl = cloudinary.url()
+                  .transformation(new Transformation().flags("attachment:download"))
+                  .generate(publicId + "." + format);
+
+          return downloadUrl;
      }
 }

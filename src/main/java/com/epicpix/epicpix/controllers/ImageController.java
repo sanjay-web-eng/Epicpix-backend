@@ -8,6 +8,8 @@ import com.epicpix.epicpix.services.CloudinaryService;
 import com.epicpix.epicpix.services.ImageService;
 import com.epicpix.epicpix.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,54 +39,67 @@ public class ImageController {
      private CloudinaryService cloudinaryService;
 
      @PostMapping("/set-image")
-     public Images getImage(@RequestParam("file") MultipartFile file ,
-                            @RequestParam("imgName")String name ,
-                            @RequestParam("username")String userName,
-                            @RequestParam("isLikesEnable")boolean isLikesEnable)
-             throws IOException {
+     public ResponseEntity<?> getImage(
+             @RequestParam("file") MultipartFile file,
+             @RequestParam("imgName") String name,
+             @RequestParam("username") String userName,
+             @RequestParam("isLikesEnable") boolean isLikesEnable) throws IOException {
 
           Optional<Users> DBuser = userRepo.findByUsername(userName);
-          Images images = new Images();
-          if (DBuser.isPresent()){
-               Path uploadPath = Paths.get("uploads");
-               String fileName = System.currentTimeMillis()+file.getOriginalFilename();
-               Path filePath = uploadPath.resolve(fileName);
-               Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-               if (!Files.exists(uploadPath)) {
-                    Files.createDirectories(uploadPath);
-               }
-
-               String url = cloudinaryService.getURL(file);
-               System.out.println(url);
-               images.setImageUrl(url);
-               images.setLikesEnable(isLikesEnable);
-               images.setOwnerProfileImage(DBuser.get().getProfileImage());
-               images.setOwnerUsername(DBuser.get().getUsername());
-               images.setImgName(name);
-               imageService.getFile(images , DBuser.get().getUsername());
-
-          }else {
-               System.out.println("User not found!!!!!");
+          if (DBuser.isEmpty()) {
+               return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
           }
-          return images;
+          if (file.isEmpty()) {
+               return new ResponseEntity<>("Missing info", HttpStatus.NO_CONTENT);
+          }else  if( name.isEmpty() ){
+               return new ResponseEntity<>("Missing info", HttpStatus.NO_CONTENT);
+          }else  if( userName.isEmpty()){
+               return new ResponseEntity<>("Missing info", HttpStatus.NO_CONTENT);
+          }
+          // Ensure upload directory exists before saving
+          Path uploadPath = Paths.get("uploads");
+          if (!Files.exists(uploadPath)) {
+               Files.createDirectories(uploadPath);
+          }
+          // Save file locally
+          String fileName = System.currentTimeMillis() + file.getOriginalFilename();
+          Path filePath = uploadPath.resolve(fileName);
+          Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+          // Upload to cloud
+          String url = cloudinaryService.getURL(file);
+          if (url == null || url.isEmpty()) {
+               return new ResponseEntity<>("Fail to upload image", HttpStatus.INTERNAL_SERVER_ERROR);
+          }
+          System.out.println("Image URL: " + url);
+          // Create and save image object
+          Images images = new Images();
+          images.setImageUrl(url);
+          images.setLikesEnable(isLikesEnable);
+          images.setOwnerProfileImage(DBuser.get().getProfileImage());
+          images.setOwnerUsername(DBuser.get().getUsername());
+          images.setImgName(name);
+          imageService.setFile(images, DBuser.get().getUsername(), DBuser.get());
+          return new ResponseEntity<>("Image uploaded successfully", HttpStatus.OK);
      }
 
+
      @PostMapping("/update-name")
-     public boolean getImag(@RequestParam("newName") String newName ,
+     public ResponseEntity<?> getImag(@RequestParam("newName") String newName ,
                             @RequestParam("id")String id){
           return imageService.updateName(newName , id);
      }
 
      @PostMapping("/update-imageUrl")
-     public boolean getImag(@RequestParam("newFile") MultipartFile file,
+     public ResponseEntity<?> getImag(@RequestParam("newFile") MultipartFile file,
                             @RequestParam("id")String id) throws IOException {
           String newUrl = cloudinaryService.getURL(file);
           return imageService.updateImageURL(newUrl , id);
      }
 
-     @PostMapping("/delete-img/{id}")
-     public void deleteImg(@PathVariable String id){
-          imageService.deleteImg(id);
+     //TODO : this service is incomplete don use
+     @PostMapping("/delete-img")
+     public  ResponseEntity<?> deleteImg(@RequestParam("id")String id , @RequestParam("username")String username ){
+          return imageService.deleteImg(id , username);
      }
 
 }

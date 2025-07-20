@@ -6,6 +6,7 @@ import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -31,6 +32,7 @@ public class SpringSecurity {
      @Bean
      public SecurityFilterChain SecurityConfiguration(HttpSecurity http) throws Exception {
           return http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(auth->auth
+                          .requestMatchers(HttpMethod.OPTIONS , "/**").permitAll()
                           .requestMatchers("/image/**" , "/user/**" ,"/likes/**").authenticated()
                           .requestMatchers("/admin/**").hasRole("ADMIN").anyRequest().permitAll())
                   .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

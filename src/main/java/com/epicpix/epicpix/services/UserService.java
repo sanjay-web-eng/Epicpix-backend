@@ -80,7 +80,7 @@ public class UserService {
                     System.out.println(jwt);
                     return new ResponseEntity<>(jwt,HttpStatus.OK);
                }else {
-                    return new ResponseEntity<>("wrong password",HttpStatus.BAD_REQUEST);
+                    return new ResponseEntity<>("Wrong password",HttpStatus.FORBIDDEN);
                }
           }else {
                return new ResponseEntity<>("User not found",HttpStatus.BAD_REQUEST);
@@ -93,63 +93,78 @@ public class UserService {
      }
 
      @Transactional
-     public boolean updateUsername(String newUsername ,String oldusername){
+     public ResponseEntity<String> updateUsername(String newUsername ,String oldusername){
           Optional<Users> DBUser = userRepo.findByUsername(oldusername);
+          Optional<Users> byUsername = userRepo.findByUsername(newUsername);
           if (DBUser.isPresent()) {
-               DBUser.get().setUsername(newUsername);
-               userRepo.save(DBUser.get());
-               return true;
+               if(!byUsername.isPresent()){
+                    DBUser.get().setUsername(newUsername);
+                    userRepo.save(DBUser.get());
+                    String JwtToken = jwtConfig.generateToken(DBUser.get().getUsername());
+                    return new ResponseEntity<>(JwtToken , HttpStatus.OK);
+               }else {
+                    return new ResponseEntity<>("this username already exist try new name" , HttpStatus.IM_USED);
+               }
           }else {
-               return false;
+               return new ResponseEntity<>("Fail to update username" , HttpStatus.NOT_FOUND);
           }
      }
+
+     //TODO : this service has so errror
      @Transactional
-     public boolean updatePassword(String newPassword ,String username){
+     public ResponseEntity<String> updatePassword(String newPassword ,String username){
           Optional<Users> DBUser = userRepo.findByUsername(username);
           if (DBUser.isPresent()) {
                DBUser.get().setPassword(newPassword);
                userRepo.save(DBUser.get());
-               return true;
+               return new ResponseEntity<>("Password update" ,HttpStatus.OK);
           }else {
-               return false;
-          }
-     }
-     @Transactional
-     public boolean updateEamil(String email ,String username){
-          Optional<Users> DBUser = userRepo.findByUsername(username);
-          if (DBUser.isPresent()) {
-               DBUser.get().setEmail(email);
-               userRepo.save(DBUser.get());
-               return true;
-          }else {
-               return false;
-          }
-     }
-     @Transactional
-     public boolean updateProfileImage(String newUrl ,String username){
-          Optional<Users> DBUser = userRepo.findByUsername(username);
-          if (DBUser.isPresent()) {
-               DBUser.get().setProfileImage(newUrl);
-               userRepo.save(DBUser.get());
-               return true;
-          }else {
-               return false;
-          }
-     }
-     @Transactional
-     public boolean deleteA(Images images , String username){
-          Optional<Users> DBUser = userRepo.findByUsername(username);
-          if (DBUser.isPresent()) {
-                DBUser.get().usersImages.remove(images);
-                userRepo.save(DBUser.get());
-               return true;
-          }else {
-               return false;
+               return new ResponseEntity<>("Fail to update password" ,HttpStatus.NOT_FOUND);
           }
      }
 
      @Transactional
-     public ResponseEntity<?> getUser(String username){
+     public ResponseEntity<String> updateEmail(String email ,String username){
+          Optional<Users> DBUser = userRepo.findByUsername(username);
+          if (DBUser.isPresent()) {
+               DBUser.get().setEmail(email);
+               userRepo.save(DBUser.get());
+               String jwt = jwtConfig.generateToken(DBUser.get().getUsername());
+               return new ResponseEntity<>(jwt ,HttpStatus.OK);
+          }else {
+               return new ResponseEntity<>("Fail to update email" ,HttpStatus.NOT_FOUND);
+          }
+     }
+     @Transactional
+     public ResponseEntity<String> updateProfileImage(String newUrl ,String username){
+          Optional<Users> DBUser = userRepo.findByUsername(username);
+          if (DBUser.isPresent()) {
+               int imgCount = DBUser.map(user -> user.usersImages.size()).orElse(0);
+
+               DBUser.get().setProfileImage(newUrl);
+               userRepo.save(DBUser.get());
+               String jwt = jwtConfig.generateToken(DBUser.get().getUsername());
+               return new ResponseEntity<>(jwt ,HttpStatus.OK);
+          }else {
+               return new ResponseEntity<>("Fail to update profile image" ,HttpStatus.NOT_FOUND);
+          }
+     }
+
+//     @Transactional
+//     public ResponseEntity<String> deleteA(Images images , String username){
+//          Optional<Users> DBUser = userRepo.findByUsername(username);
+//          if (DBUser.isPresent()) {
+//               DBUser.get().usersImages.remove(images);
+//               userRepo.save(DBUser.get());
+//               return new ResponseEntity<>("image" ,HttpStatus.OK);
+//          }else {
+//               return false;
+//          }
+//     }
+
+     @Transactional
+     public ResponseEntity<?> getUser(String tokem){
+          String username = jwtConfig.extractUsername(tokem);
           Optional<Users> DBUsername = userRepo.findByUsername(username);
           if (DBUsername.isPresent()) {
                return new ResponseEntity<>(DBUsername.get() , HttpStatus.OK) ;
@@ -158,24 +173,36 @@ public class UserService {
           }
      }
 
+
      @Transactional
      public ResponseEntity<?> saveImg(String username , String postid){
           Optional<Users> DBUser = userRepo.findByUsername(username);
           Optional<Images> DBPost = imageRepo.findById(postid);
           if (DBUser.isPresent() && DBPost.isPresent()) {
-               DBUser.get().saveImages.add(DBPost.get());
                if (!DBUser.get().saveImages.contains(DBPost.get())) {
                     DBUser.get().saveImages.add(DBPost.get());
+                    userRepo.save(DBUser.get());
+                    return new ResponseEntity<>("Saved" , HttpStatus.OK) ;
                }else {
-                    return new ResponseEntity<>("You already saved this post" , HttpStatus.BAD_REQUEST) ;
+                    return new ResponseEntity<>("You already saved this post" , HttpStatus.IM_USED) ;
                }
-               userRepo.save(DBUser.get());
-               return new ResponseEntity<>("Saved" , HttpStatus.OK) ;
           }else {
                return new ResponseEntity<>("Something went wrong" , HttpStatus.BAD_REQUEST);
           }
      }
+     @Transactional
+     public ResponseEntity<?> removeSavedImg(String username , String postid){
+          Optional<Users> DBUser = userRepo.findByUsername(username);
+          Optional<Images> DBPost = imageRepo.findById(postid);
+          if (DBUser.isPresent() && DBPost.isPresent()) {
+                    DBUser.get().saveImages.remove(DBPost.get());
+                    userRepo.save(DBUser.get());
+                    return new ResponseEntity<>("Removed" , HttpStatus.OK) ;
+          }else {
+               return new ResponseEntity<>("Something went wrong" , HttpStatus.BAD_REQUEST);
+          }
 
+     }
      // Some Service for admin
 
      @Transactional

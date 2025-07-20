@@ -19,13 +19,12 @@ public class LikesController {
      private LikesService likesService;
 
      @PostMapping("/set-like")
-     public String setLike(@RequestBody HelperClass user){
+     public ResponseEntity<?> setLike(@RequestBody HelperClass user){
           return likesService.likesService(user.getPostId(), user.getUsername());
      }
 
      @PostMapping("/remove-like")
-     public String ReLike(@RequestBody HelperClass user){
+     public ResponseEntity<?> ReLike(@RequestBody HelperClass user){
           return  likesService.dislikeService(user.getPostId(), user.getUsername());
-
      }
 }
