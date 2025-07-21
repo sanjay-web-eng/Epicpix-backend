@@ -13,7 +13,7 @@ public class CORSConfig {
                     @Override
                     public void addCorsMappings(CorsRegistry registry) {
                          registry.addMapping("/**") // allow all endpoints
-                                 .allowedOrigins("https://epicpix-frontend.vercel.app") // frontend domain
+                                 .allowedOrigins("http://localhost:5173") // frontend domain
                                  .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                                  .allowedHeaders("*")
                                  .allowCredentials(true);

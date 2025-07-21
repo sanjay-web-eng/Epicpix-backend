@@ -50,9 +50,9 @@ public class PublicController {
           return  userService.singupService(users);
      }
 
-     @PostMapping("/login/{username}/{password}")
-     public ResponseEntity<String> login(@PathVariable String username ,
-                                         @PathVariable String password ){
+     @PostMapping("/login")
+     public ResponseEntity<String> login(@RequestParam("username") String username ,
+                                         @RequestParam("password") String password ){
           return userService.loginService(username, password);
      }
      @PostMapping("/get-user/{token}")

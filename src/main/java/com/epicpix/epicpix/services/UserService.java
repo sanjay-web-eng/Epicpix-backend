@@ -71,21 +71,29 @@ public class UserService {
      }
 
      @Transactional
-     public ResponseEntity<String> loginService (String username , String password){
-          Optional<Users> DBusername = userRepo.findByUsername(username);
-          if (DBusername.isPresent()){
-               if(bCryptPasswordEncoder.matches(password , DBusername.get().getPassword())){
-                    UserDetails userDetails = userDetailsConfig.loadUserByUsername(DBusername.get().getUsername());
-                    String jwt = jwtConfig.generateToken(userDetails.getUsername());
-                    System.out.println(jwt);
-                    return new ResponseEntity<>(jwt,HttpStatus.OK);
-               }else {
-                    return new ResponseEntity<>("Wrong password",HttpStatus.FORBIDDEN);
-               }
-          }else {
-               return new ResponseEntity<>("User not found",HttpStatus.BAD_REQUEST);
+     public ResponseEntity<String> loginService(String username, String password) {
+          Optional<Users> userOpt = userRepo.findByUsername(username);
+
+          // User not found
+          if (userOpt.isEmpty()) {
+               return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
           }
+
+          Users user = userOpt.get();
+
+          // Incorrect password
+          if (!bCryptPasswordEncoder.matches(password, user.getPassword())) {
+               return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect password");
+          }
+
+          // Generate JWT token
+          UserDetails userDetails = userDetailsConfig.loadUserByUsername(user.getUsername());
+          String jwt = jwtConfig.generateToken(userDetails.getUsername());
+          System.out.println(jwt);
+
+          return ResponseEntity.ok(jwt);
      }
+
 
      @Transactional
      public void saved(Users users ){
